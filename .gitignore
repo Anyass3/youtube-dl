@@ -1,0 +1,13 @@
+.DS_Store
+node_modules
+/.svelte
+/build
+/functions
+backend/.env
+env
+.env
+package-lock.json
+sync_backend.py
+sync_to_server.py
+dmt/sync_server
+backend/__pycache__

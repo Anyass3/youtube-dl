@@ -1,0 +1,24 @@
+{
+    "name": "YouTube Downloader",
+    "short_name": "YDL",
+    "start_url": ".",
+  "display_override": ["window-control-overlay", "minimal-ui"],
+    "display": "standalone",
+    "background_color": "#f3f4f6",
+    "theme_color": "#6663f1",
+    "lang": "en",
+    "scope": "/",
+    "description": "A YouTube video downloader",
+    "icons": [
+        {
+            "src": "/ytdl-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "/ytdl-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ]
+}
