@@ -57,9 +57,11 @@ module.exports = {
 							const reFiles = /export[\ ]*const[\ ]*files[\ ]*\=[\ ]*(?<code>\[[^\[\]]*\])/;
 
 							// extract build files
-							const build = JSON.parse(code.match(reBuild)?.groups?.code || []);
+							// const build = JSON.parse(code.match(reBuild)?.groups?.code || []);
+							const build = JSON.parse(code.match(reBuild).groups.code);
 							// extract static files/assets
-							const files = JSON.parse(code.match(reFiles)?.groups?.code || []);
+							//const files = JSON.parse(code.match(reFiles)?.groups?.code || []);
+							const files = JSON.parse(code.match(reFiles).groups.code);
 
 							code = code.replace(
 								reBuild,
