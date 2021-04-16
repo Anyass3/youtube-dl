@@ -11,3 +11,4 @@ sync_backend.py
 sync_to_server.py
 dmt/sync_server
 backend/__pycache__
+server_endpoint
