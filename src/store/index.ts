@@ -453,7 +453,11 @@ export default StoreX([
 				const resp = (await api.get(url))?.data.items[0];
 				// console.log(resp);
 				if (resp) {
-					const data: any = { player: resp.player.embedHtml };
+					const data: any = {
+						player: resp.player.embedHtml
+							.replace(/src="http[^s]/, 'src="https:')
+							.replace(/src='http[^s]/, "src='https:")
+					};
 					data['aspectRatio'] =
 						parseInt(data.player.match(/width=["'](?<width>[0-9]+)["']/).groups.width) /
 						parseInt(data.player.match(/height=["'](?<height>[0-9]+)["']/).groups.height);
@@ -464,7 +468,7 @@ export default StoreX([
 					const { publishedAt, ...toShow } = data;
 
 					dispatch('setIsAvailable', !!resp);
-					// console.log('data', data, id.length > 11);
+					// console.log('resp.player', data.player);
 					return toShow;
 				} else throw new Error('fetch error or Invalid videoId or playlistId or URL');
 			}
