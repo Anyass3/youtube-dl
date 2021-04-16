@@ -85,14 +85,15 @@ gunicorn backend:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
 # features
+
 - frontend works offline after first load thanks to svelte-kit service-worker feature and [workbox](https://developers.google.com/web/tools/workbox/)
 - frontend is installable
 - auto-updatable after every build thanks to my custom-config-plugin in [svelte.config.cjs](https://github.com/Anyass3/youtube-dl/blob/main/svelte.config.cjs#L37)
 - downloads a youtube video
 - downloads a youtube playlist
 
-
 preview
 
 ![preview](https://github.com/Anyass3/youtube-dl/blob/main/screenshot.png)
+
 # youtube-dl

@@ -22,15 +22,9 @@
 		"paths": {
 			"$app/*": [".svelte/dev/runtime/app/*", ".svelte/build/runtime/app/*"],
 			"$service-worker": [".svelte/build/runtime/service-worker"],
-			"$lib/*": [
-				"src/lib/*"
-			],
-			"$store": [
-				"src/store"
-			],
-			"$components/*": [
-				"src/components/*"
-			]
+			"$lib/*": ["src/lib/*"],
+			"$store": ["src/store"],
+			"$components/*": ["src/components/*"]
 		}
 	},
 	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]
