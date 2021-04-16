@@ -15,7 +15,7 @@ if (
 ) {
 	let file = fs.readFileSync('src/lib/connectionBuilder.ts', 'utf-8');
 	let server_endpoint = fs.readFileSync('server_endpoint', 'utf-8');
-	server_endpoint = server_endpoint.replace(/[\n\t\ ]*/);
+	server_endpoint = server_endpoint.replace(/[\n\t\ ]*/g, '');
 	if (!(server_endpoint.includes('"') || server_endpoint.includes("'")))
 		server_endpoint = `'${server_endpoint}'`;
 
