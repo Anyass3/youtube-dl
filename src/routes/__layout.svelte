@@ -1,6 +1,6 @@
 <script>
+	import 'tailwindcss/tailwind.css';
 	import '../app.scss';
-	import 'virtual:windi.css';
 	import store from '$store';
 	import Prompt from '$components/prompt.svelte';
 
@@ -48,7 +48,7 @@
 </script>
 
 <Prompt />
-<div class="max-w-xlg h-screen mx-auto p-4 bg-gray-200 shadow-md">
+<div class="max-w-xlg min-h-screen mx-auto p-4 bg-gray-200 shadow-md">
 	<Nav />
 	<slot />
 </div>

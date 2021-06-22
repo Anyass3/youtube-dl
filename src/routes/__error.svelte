@@ -1,3 +1,14 @@
+<script context="module">
+	export function load({ error, status }) {
+		return {
+			props: {
+				error,
+				status
+			}
+		};
+	}
+</script>
+
 <script>
 	export let status;
 	export let error;
@@ -10,7 +21,7 @@
 	<div>
 		<p class="text-red-900 text-9xl">Whoops!!!</p>
 		<p class="text-red-900 text-5xl">Error Code: {status}</p>
-		<p class="text-red-700 text-3xl">{error.message}</p>
+		<p class="text-red-700 text-3xl">{error?.message}</p>
 	</div>
 	<button
 		on:click={refreshPage}
