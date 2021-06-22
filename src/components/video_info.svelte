@@ -7,7 +7,7 @@
 </script>
 
 {#if $info_value.length === 0}
-	<div class="relative p-1 bg-indigo-200 rounded-sm mt-3 w-full">
+	<div class="relative p-1 bg-indigo-200 rounded-sm w-full">
 		No video {info}
 	</div>
 {:else}

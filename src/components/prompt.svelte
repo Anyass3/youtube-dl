@@ -12,6 +12,7 @@
 	function accept() {
 		$prompt.onaccept().then(() => store.dispatch('hidePrompt'));
 	}
+
 	function backdrop(ev) {
 		if (ev.target === ev.currentTarget) backdrop_key = Math.random();
 	}
@@ -22,7 +23,8 @@
 		<div
 			transition:fade={{ delay: 100, duration: 200 }}
 			on:click={backdrop}
-			class="bg-opacity-50 px-1 bg-black flex fixed m-auto top-0 items-center justify-center w-screen h-screen"
+			style="background-color: rgba(0,0,0,0.5)"
+			class=" px-1 flex fixed m-auto top-0 items-center select-none justify-center w-screen h-screen"
 		>
 			<div
 				in:scale={{ delay: 100, start: 0.8, easing: backOut, duration: 250 }}

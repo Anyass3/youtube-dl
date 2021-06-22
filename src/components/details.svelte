@@ -25,25 +25,27 @@
 	];
 </script>
 
-<div class="pl-1 max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+<div class="pl-1 mx-auto bg-white rounded-xl shadow-md overflow-hidden fluid" style="width:500px">
 	{#if $details && !$checking}
 		<h3 class="capitalize tracking-wide text-lg text-center text-indigo-500 font-bold my-2">
-			Info
+			details
 		</h3>
-		<div class="flex justify-between px-5 mb-2">
+		<div class="flex justify-between px-1 md:px-5 border-b border-indigo-300">
 			{#each infos as [id, name, num] (id)}
-				<button
-					on:click={() => {
-						info = name;
-					}}
-					class="capitalize hover:text-indigo-400"
-					class:active={name === info}>{name}{num !== undefined ? `(${num})` : ''}</button
-				>
+				<div>
+					<button
+						on:click={() => {
+							info = name;
+						}}
+						class="capitalize hover:text-indigo-400 focus:outline-none"
+						class:active={name === info}>{name}{num !== undefined ? `(${num})` : ''}</button
+					>
+				</div>
 			{/each}
 		</div>
 
 		<div class="">
-			<div class="md:flex w-sm md:w-full md:min-w-md max-w-full">
+			<div class="md:flex p-2">
 				<div class:hidden={info !== 'playlist' && info !== 'video'}>
 					<!-- we do want MediaDetails to rerender everytime -->
 					<MediaDetails />
@@ -67,6 +69,6 @@
 
 <style lang="postcss">
 	.active {
-		@apply border-indigo-400 text-semebold border-b-5 text-indigo-600;
+		@apply font-semibold text-indigo-700;
 	}
 </style>

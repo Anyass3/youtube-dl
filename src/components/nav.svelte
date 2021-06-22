@@ -18,6 +18,6 @@
 
 <style lang="postcss">
 	.active {
-		@apply border-indigo-400 border-b-6 text-indigo-700;
+		@apply border-indigo-400 border-b-8 text-indigo-700;
 	}
 </style>
