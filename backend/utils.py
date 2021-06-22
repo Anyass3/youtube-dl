@@ -9,7 +9,7 @@ from starlette.types import Receive, Scope, Send
 from starlette.background import BackgroundTask
 from starlette.concurrency import iterate_in_threadpool, run_until_first_complete
 from urllib.error import HTTPError
-from pytube import request
+from pytube import request, extract
 
 from pytube import YouTube as _YouTube
 from pytube import Stream as _Stream
@@ -173,31 +173,46 @@ class Stream(_Stream):
 
 class YouTube(_YouTube):
     # socket_id = 'hello'
+    @property
+    def fmt_streams(self):
+        """Returns a list of streams if they have been initialized.
 
-    def initialize_stream_objects(self, fmt: str) -> None:
-        """Convert manifest data to instances of :class:`Stream <Stream>`.
-
-        Take the unscrambled stream data and uses it to initialize
-        instances of :class:`Stream <Stream>` for each media stream.
-
-        :param str fmt:
-            Key in stream manifest (``ytplayer_config``) containing progressive
-            download or adaptive streams (e.g.: ``url_encoded_fmt_stream_map``
-            or ``adaptive_fmts``).
-
-        :rtype: None
-
+        If the streams have not been initialized, finds all relevant
+        streams and initializes them.
         """
-        # print('socket_idsocket_idsocket_id', self.socket_id)
-        stream_manifest = self.player_config_args[fmt]
-        for stream in stream_manifest:
-            video = Stream(
-                stream=stream,
-                player_config_args=self.player_config_args,
-                monostate=self.stream_monostate,
-            )
-            # video.socket_id = self.socket_id
-            self.fmt_streams.append(video)
+        self.check_availability()
+        if self._fmt_streams:
+            return self._fmt_streams
+
+        self._fmt_streams = []
+        # https://github.com/pytube/pytube/issues/165
+        stream_maps = ["url_encoded_fmt_stream_map"]
+        if "adaptive_fmts" in self.player_config_args:
+            stream_maps.append("adaptive_fmts")
+
+        # unscramble the progressive and adaptive stream manifests.
+        for fmt in stream_maps:
+            if not self.age_restricted and fmt in self.vid_info:
+                extract.apply_descrambler(self.vid_info, fmt)
+            extract.apply_descrambler(self.player_config_args, fmt)
+
+            extract.apply_signature(self.player_config_args, fmt, self.js)
+
+            # build instances of :class:`Stream <Stream>`
+            # Initialize stream objects
+            stream_manifest = self.player_config_args[fmt]
+            for stream in stream_manifest:
+                video = Stream(
+                    stream=stream,
+                    player_config_args=self.player_config_args,
+                    monostate=self.stream_monostate,
+                )
+                self._fmt_streams.append(video)
+
+        self.stream_monostate.title = self.title
+        self.stream_monostate.duration = self.length
+
+        return self._fmt_streams
 
 
 @ lru_cache()
