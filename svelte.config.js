@@ -1,19 +1,20 @@
 import preprocess from 'svelte-preprocess';
 import { resolve } from 'path';
 import adapterStatic from '@sveltejs/adapter-static';
+// import netlify from '@sveltejs/adapter-netlify';
 import sw from 'kit-sw-workbox';
-import fs from 'fs';
+// import fs from 'fs';
 
-let VITE_SERVER_ENDPOINT;
-if (fs.existsSync('.env')) {
-	const env = fs.readFileSync('.env', 'utf-8');
-	const envDict = env.split('\n').reduce((dict, e) => {
-		const [key = 'VITE_SERVER_ENDPOINT', value = 'http://127.0.0.1:8000'] = e.trim().split('=');
-		return { ...dict, [key]: value.replace(/['"]/g, '') };
-	}, {});
-	VITE_SERVER_ENDPOINT = envDict.VITE_SERVER_ENDPOINT || 'http://127.0.0.1:8000';
-	console.log(VITE_SERVER_ENDPOINT);
-}
+// let VITE_SERVER_ENDPOINT;
+// if (fs.existsSync('.env')) {
+// 	const env = fs.readFileSync('.env', 'utf-8');
+// 	const envDict = env.split('\n').reduce((dict, e) => {
+// 		const [key = 'VITE_SERVER_ENDPOINT', value = 'http://127.0.0.1:8000'] = e.trim().split('=');
+// 		return { ...dict, [key]: value.replace(/['"]/g, '') };
+// 	}, {});
+// 	VITE_SERVER_ENDPOINT = envDict.VITE_SERVER_ENDPOINT || 'http://127.0.0.1:8000';
+// 	console.log(VITE_SERVER_ENDPOINT);
+// }
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -43,16 +44,16 @@ const config = {
 					$store: resolve('src/store'),
 					$components: resolve('src/components')
 				}
-			},
-			server: {
-				proxy: {
-					'/_api': {
-						target: VITE_SERVER_ENDPOINT,
-						changeOrigin: true,
-						rewrite: (path) => path.replace(/^\/_api/, '')
-					}
-				}
 			}
+			// server: {
+			// 	proxy: {
+			// 		'/_api': {
+			// 			target: VITE_SERVER_ENDPOINT,
+			// 			changeOrigin: true,
+			// 			rewrite: (path) => path.replace(/^\/_api/, '')
+			// 		}
+			// 	}
+			// }
 		}
 	}
 };

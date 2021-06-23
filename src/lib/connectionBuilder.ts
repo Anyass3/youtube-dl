@@ -2,6 +2,9 @@ import axios from 'axios';
 import { v4 } from 'uuid';
 import { browser } from '$app/env';
 
+//@ts-ignore
+const VITE_SERVER_ENDPOINT: string = import.meta.env.VITE_SERVER_ENDPOINT;
+
 export const getSocketId = () => {
 	if (!browser) return;
 	let id = window.localStorage.getItem('youtube_downloader_uuid');
@@ -27,7 +30,7 @@ export const axiosFetch = async (instance, path: string, ...args) => {
 };
 
 export const axiosInstance = axios.create({
-	baseURL: '/_api'
+	baseURL: VITE_SERVER_ENDPOINT
 });
 export const api = {
 	get: (path: string, ...args) => axiosFetch(axiosInstance.get, path, ...args),
