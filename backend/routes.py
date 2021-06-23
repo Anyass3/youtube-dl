@@ -75,6 +75,10 @@ def delete_video(filepath):
     async def _del():
         if filepath and os.path.exists(filepath):
             os.remove(filepath)
+        if filepath and os.path.exists(filepath.replace('.', '-a.')):
+            os.remove(filepath.replace('.', '-a.'))
+        if filepath and os.path.exists(filepath.replace('.', '-v.')):
+            os.remove(filepath.replace('.', '-v.'))
             print('deleted', filepath)
 
     return _del
