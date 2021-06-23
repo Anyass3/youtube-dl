@@ -52,7 +52,11 @@
 			{#if $media_types.length === 2}
 				<Select name="media type" options={$media_types} />
 			{/if}
-			<Select name="resolution" options={['1080p', '720p', '480p', '360p', '144p']} />
+			<Select
+				name="resolution"
+				options={['1080p', '720p', '480p', '360p', '144p']}
+				on:change={() => ($showDownlaoder = 'btn')}
+			/>
 		</div>
 		<!-- <div in:fade out:fade class="my-2">
         <input
