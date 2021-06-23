@@ -72,12 +72,12 @@ async def playlist_urls(playlist_id: str):
 
 
 def delete_video(filepath):
-    def _del(filepath):
+    def _del():
         if filepath and os.path.exists(filepath):
             os.remove(filepath)
-            print('deleted',filepath)
+            print('deleted', filepath)
 
-    return _del(filepath)
+    return _del
 
 
 @router.get("/download/{videoId}")
