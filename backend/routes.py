@@ -75,6 +75,7 @@ def delete_video(filepath):
     def _del(filepath):
         if filepath and os.path.exists(filepath):
             os.remove(filepath)
+            print('deleted',filepath)
 
     return _del(filepath)
 
