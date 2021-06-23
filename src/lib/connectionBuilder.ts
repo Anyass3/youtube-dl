@@ -15,13 +15,13 @@ export const getSocketId = () => {
 export const axiosFetch = async (instance, path: string, ...args) => {
 	try {
 		const res = await instance(path, ...args);
-		return { status: res.status, ok: true, headers: res.headers, data: res.data };
+		return { status: res?.status, ok: true, headers: res?.headers, data: res?.data };
 	} catch (error) {
 		return {
-			status: error.response.status,
+			status: error.response?.status,
 			ok: false,
-			headers: error.response.headers,
-			data: error.response.data
+			headers: error.response?.headers,
+			data: error.response?.data
 		};
 	}
 };
