@@ -8,10 +8,10 @@ let VITE_SERVER_ENDPOINT;
 if (fs.existsSync('.env')) {
 	const env = fs.readFileSync('.env', 'utf-8');
 	const envDict = env.split('\n').reduce((dict, e) => {
-		const [key, value] = e.trim().split('=');
+		const [key = 'VITE_SERVER_ENDPOINT', value = 'http://127.0.0.1:8000'] = e.trim().split('=');
 		return { ...dict, [key]: value.replace(/['"]/g, '') };
 	}, {});
-	VITE_SERVER_ENDPOINT = envDict.VITE_SERVER_ENDPOINT || 'http://127.0.0.1:8000';
+	VITE_SERVER_ENDPOINT = envDict.VITE_SERVER_ENDPOINT;
 	console.log(VITE_SERVER_ENDPOINT);
 }
 
