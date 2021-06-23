@@ -72,7 +72,7 @@ async def playlist_urls(playlist_id: str):
 
 
 def delete_video(filepath):
-    def _del():
+    async def _del():
         if filepath and os.path.exists(filepath):
             os.remove(filepath)
             print('deleted', filepath)
