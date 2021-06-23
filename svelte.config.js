@@ -11,7 +11,7 @@ if (fs.existsSync('.env')) {
 		const [key, value] = e.trim().split('=');
 		return { ...dict, [key]: value.replace(/['"]/g, '') };
 	}, {});
-	VITE_SERVER_ENDPOINT = 'http://127.0.0.1:8000';
+	VITE_SERVER_ENDPOINT = envDict.VITE_SERVER_ENDPOINT || 'http://127.0.0.1:8000';
 	console.log(VITE_SERVER_ENDPOINT);
 }
 

@@ -1,6 +1,9 @@
 <script>
 	import Details from '$components/details.svelte';
+
+	import store from '$store';
 	import Form from '$components/form.svelte';
+	store.dispatch('listeners');
 </script>
 
 <main class="">

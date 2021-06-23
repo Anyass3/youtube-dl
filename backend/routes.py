@@ -72,8 +72,11 @@ async def playlist_urls(playlist_id: str):
 
 
 def delete_video(filepath):
-    if filepath and os.path.exists(filepath):
-        os.remove(filepath)
+    def _del(filepath):
+        if filepath and os.path.exists(filepath):
+            os.remove(filepath)
+
+    return _del(filepath)
 
 
 @router.get("/download/{videoId}")
@@ -81,4 +84,4 @@ async def stream_video(videoId: str, resolution: str = '360p'):
     video: YoutubeVideoStream = await load_video(videoId, res=resolution)
     if video.is_stream:
         return StreamingResponse(video(), media_type=video.media_type, headers=video.headers)
-    return FileResponse(video.filepath, media_type=video.media_type, filename=video.filename, background=delete_video)
+    return FileResponse(video.filepath, media_type=video.media_type, filename=video.filename, background=delete_video(video.filepath))
