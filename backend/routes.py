@@ -1,4 +1,4 @@
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import time
 import httpx
 import json
@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.download import YouTube, load_video
 from backend.store import store
 from backend.socket import Socket
-from urllib.parse import quote
 from backend.utils import *
 from backend import config
 
@@ -65,24 +64,6 @@ async def playlist_items(playlist_id: str):
         return items
 
 
-@router.post("/connect_socket_route/{id}")
-async def push_to_connected_websockets(id: str):
-    pass
-    # socket = Socket(id)
-
-    # async def playlist_urls(playlist_id):
-    #     try:
-    #         playlist = Playlist(
-    #             "https://www.youtube.com/playlist?list=" + playlist_id)
-    #     except Exception as e:
-    #         await socket.emit('playlist_urls', 'error')
-    #         assert (e)
-    #     else:
-    #         await socket.emit('playlist_urls', playlist.video_urls)
-
-    # await socket.on('playlist_urls', playlist_urls)
-
-
 @router.get("/playlist_urls/{playlist_id}")
 async def playlist_urls(playlist_id: str):
     playlist = Playlist(
@@ -90,25 +71,14 @@ async def playlist_urls(playlist_id: str):
     return playlist.video_urls
 
 
-class Params(BaseModel):
-    id: Optional[str]
-    urls: Optional[str]
-    extension: str
-    resolution: str
+def delete_video(filepath):
+    if filepath and os.path.exists(filepath):
+        os.remove(filepath)
 
 
-@router.get("/download/{socket_id}/{videoId}")
-async def stream_video(socket_id: str, videoId: str, extension: str = "mp4", resolution: str = '360p'):
-    video = await load_video(videoId, socket_id, ext=extension, res=resolution)
-    filename = video.default_filename+'.mp4'
-    content_disposition_filename = quote(filename)
-    if content_disposition_filename != filename:
-        content_disposition = "attachment; filename*=utf-8''{}".format(
-            content_disposition_filename
-        )
-    else:
-        content_disposition = 'attachment; filename="{}"'.format(
-            filename)
-    headers = {'Content-Length': f'{video.filesize}',
-               'Content-Disposition': content_disposition}
-    return StreamingResponse(video.start_streaming(videoId), media_type=video.mime_type, headers=headers, content_len=video.filesize, socket_id=socket_id, filename=filename, video_id=videoId, filepath=video.path)
+@router.get("/download/{videoId}")
+async def stream_video(videoId: str, resolution: str = '360p'):
+    video: YoutubeVideoStream = await load_video(videoId, res=resolution)
+    if video.is_stream:
+        return StreamingResponse(video(), media_type=video.media_type, filename=video.filename, headers=video.headers)
+    return FileResponse(video.filepath, media_type=video.media_type, filename=video.filename, background=delete_video)

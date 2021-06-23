@@ -2,6 +2,18 @@ import preprocess from 'svelte-preprocess';
 import { resolve } from 'path';
 import adapterStatic from '@sveltejs/adapter-static';
 import sw from 'kit-sw-workbox';
+import fs from 'fs';
+
+let VITE_SERVER_ENDPOINT;
+if (fs.existsSync('.env')) {
+	const env = fs.readFileSync('.env', 'utf-8');
+	const envDict = env.split('\n').reduce((dict, e) => {
+		const [key, value] = e.trim().split('=');
+		return { ...dict, [key]: value.replace(/['"]/g, '') };
+	}, {});
+	VITE_SERVER_ENDPOINT = 'http://127.0.0.1:8000';
+	console.log(VITE_SERVER_ENDPOINT);
+}
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -35,7 +47,7 @@ const config = {
 			server: {
 				proxy: {
 					'/_api': {
-						target: 'http://127.0.0.1:8000',
+						target: VITE_SERVER_ENDPOINT,
 						changeOrigin: true,
 						rewrite: (path) => path.replace(/^\/_api/, '')
 					}

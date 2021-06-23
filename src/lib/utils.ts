@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-boolean-cast */
 export const debounce = (fn: CallableFunction, delay = 500) => {
 	let timeout;
 	return (...args) => {

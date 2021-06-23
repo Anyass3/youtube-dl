@@ -3,8 +3,8 @@
 // :)
 
 const fs = require('fs');
-if (fs.existsSync('build')) {
-	fs.rmdirSync('build', { recursive: true });
+if (fs.existsSync('build/_app')) {
+	fs.rmdirSync('build/_app', { recursive: true });
 	console.log('cleaned the previous build');
 }
 

@@ -1,17 +1,15 @@
 import StoreX from 'stores-x';
-import { api, serverEndpoint, getWebsoket, getSocketId } from '$lib/connectionBuilder';
+import { api } from '$lib/connectionBuilder';
 import { dev } from '$app/env';
 import { timedelta, initPrompt, hash } from './utils';
 
 export default StoreX([
 	{
-		noStore: ['api', 'app_info', 'tempDetails', 'socket', 'socketId', 'base_url'],
+		noStore: ['api', 'app_info', 'tempDetails', 'base_url'],
 		state: {
 			api, // axios instance
 			ws: null, // websocket instance
-			formData: { 'media type': '' }, // {videoId,'media type',resolution,extension}
-			socket: null, // a websocket maanger
-			socketId: getSocketId(), // uuid.v4
+			formData: { 'media type': '' }, // {videoId,'media type',resolution}
 			//
 			media_types: [], // ['video','playlist']
 			//
@@ -133,18 +131,11 @@ export default StoreX([
 			setVideoInfos(state, videos: Array<any>) {
 				state.videosInfo.update((value) => {
 					for (let { videoId, title } of videos) {
-						const id = hash();
+						// const id = hash();
 						value[videoId] = { videoId, title };
 					}
 					return value;
 				});
-			},
-			rmCancelled(state, videoId) {
-				state.downloading.update((videos) => {
-					return videos.filter((video) => video.videoId !== videoId);
-				});
-				state.showDownlaoder.set('btn');
-				state.socket.emitLocal('download_error', 'cancelled by user');
 			}
 		},
 		actions: {
@@ -156,17 +147,12 @@ export default StoreX([
 				const options = initPrompt({ visible: false });
 				commit('setPrompt', options);
 			},
-			async get_info({ state, dispatch }) {
+			async get_info({ dispatch }) {
 				const resp = await api.get('/info');
 				dispatch('setApp_info', resp.data);
 			},
 			async checkAvailability({ state, commit, dispatch, g }) {
 				const url = state.url.get().trim();
-
-				// if (!url) {
-				// 	dispatch('setError', "input shouldn't be empty");
-				// 	return;
-				// }
 
 				dispatch('setShowDownlaoder', 'btn');
 				let title; // might be needed in addToPending below
@@ -184,61 +170,50 @@ export default StoreX([
 					// console.log(id, videoId, playlistId);
 					dispatch('setError');
 					dispatch('setChecking', true);
-					try {
-						const temp = state.tempDetails.get(id);
-						// console.log(state.tempDetails, temp);
-						if (temp) {
-							dispatch('setDetails', temp);
-							title = temp.title;
+					const temp = state.tempDetails.get(id);
+					// console.log(state.tempDetails, temp);
+					if (temp) {
+						dispatch('setDetails', temp);
+						title = temp.title;
+						// dispatch('setIsAvailable', true);
+					} else {
+						const resp = await dispatch('fetchMediaDetails', id);
+						if (state.isAvailable.get()) {
+							dispatch('setDetails', resp);
 							// dispatch('setIsAvailable', true);
-							// console.log('response from temp', temp);
-						} else {
-							const resp = await dispatch('fetchMediaDetails', id);
-							if (state.isAvailable.get()) {
-								dispatch('setDetails', resp);
-								// console.log('response', resp);
-								// dispatch('setIsAvailable', true);
-								state.tempDetails.set(id, resp);
-								title = resp.title;
-							}
-							// else dispatch('setIsAvailable', false);
+							state.tempDetails.set(id, resp);
+							title = resp.title;
 						}
-						if (id.length > 11) {
-							console.log('emit from playlists');
-							const url = '/playlist_items/' + playlistId;
-							try {
-								const tempVideos = state.tempDetails.get(url);
-								if (tempVideos) {
-									commit('setVideoInfos', tempVideos);
-									commit('setTempPending', tempVideos);
-								} else {
-									const respVideos = (await api.get(url))?.data;
-									// console.log('emit from playlists', respVideos);
-									state.tempDetails.set(url, respVideos);
-									commit('setVideoInfos', respVideos);
-									commit('setTempPending', respVideos);
-								}
+						// else dispatch('setIsAvailable', false);
+					}
+					if (id.length > 11) {
+						const url = '/playlist_items/' + playlistId;
+						const tempVideos = state.tempDetails.get(url);
+						if (tempVideos) {
+							commit('setVideoInfos', tempVideos);
+							commit('setTempPending', tempVideos);
+						} else {
+							const resp = await api.get(url);
+							if (resp.ok) {
+								state.tempDetails.set(url, resp.data);
+								commit('setVideoInfos', resp.data);
+								commit('setTempPending', resp.data);
+							} else {
 								dispatch('setChecking', false);
-							} catch (error) {
 								dispatch('setError', "Sorry can't get playlist_urls. Try again later!");
 							}
-						} else {
-							commit('setVideoInfos', [{ videoId, title }]);
-							commit('setTempPending', [{ videoId, title }]);
-							dispatch('setChecking', false);
 						}
-					} catch (error) {
-						dispatch('setChecking', false);
-						// dispatch('setIsAvailable', false);
-						dispatch('setError', error.message);
+					} else {
+						commit('setVideoInfos', [{ videoId, title }]);
+						commit('setTempPending', [{ videoId, title }]);
 					}
 				} else {
-					dispatch('setChecking', false);
 					// dispatch('setIsAvailable', false);
 					dispatch('setError', 'Invalid videoId or playlistId or URL');
 				}
+				dispatch('setChecking', false);
 			},
-			async listeners({ state, commit, dispatch }) {
+			async listeners({ state }) {
 				window.addEventListener('beforeunload', (event) => {
 					if (state.pending.get().length > 0 || state.downloading.get().length > 0)
 						event.returnValue = true;
@@ -249,38 +224,8 @@ export default StoreX([
 						event.returnValue = true;
 					// console.log(event);
 				});
-				state.socket.on('download_start', async (payload) => {
-					dispatch('setShowDownlaoder', false);
-					commit('onDownloadStart', payload);
-					console.log('starting', payload);
-				});
-
-				state.socket.on('content_len', async (payload) => {
-					commit('setContentLen', payload);
-				});
-
-				// state.socket.on('progress', async (payload) => {
-				// 	const result = commit('setProgress', payload);
-				// 	if (!result) {
-				// 		state.socket.emit('start');
-				// 		state.socket.emit('content_len');
-				// 	}
-				// });
-
-				state.socket.on('download_error', async (reason) => {
-					const downloadIterator = await dispatch('downloadIterator');
-					downloadIterator.next();
-					console.log('download_error', reason);
-				});
-
-				state.socket.on('downloaded', async (payload) => {
-					commit('onDownloadEnd', payload);
-					const downloadIterator = await dispatch('downloadIterator');
-					downloadIterator.next();
-					console.log('downloaded', payload);
-				});
 			},
-			downloadIterator({ state, commit, g, dispatch }) {
+			downloadIterator({ g, dispatch }) {
 				let iterationCount = 0;
 				const Iterator = {
 					next: function () {
@@ -298,150 +243,56 @@ export default StoreX([
 				};
 				return Iterator;
 			},
+			async rmCancelled({ state, dispatch }, videoId) {
+				state.downloading.update((videos) => {
+					return videos.filter((video) => video.videoId !== videoId);
+				});
+				state.showDownlaoder.set('btn');
+				const downloadIterator = await dispatch('downloadIterator');
+				downloadIterator.next();
+				console.log('download_error', 'download cancelled by user');
+			},
 
 			async postForm({ state, commit, g, dispatch }) {
-				// let bytes_loaded = 0;
-				// state.socket.on('on_download', async (obj) => {
-				// 	// dispatch('download', obj);
-				// });
-
-				// const getVideoId = (url) =>
-				// 	(url.match(/(?:v\=(?<id>[\w\-]{11}))/) || url.match(/(?<id>^[\w\-]{11}$)/))?.groups?.id;
-				// const videoIds = state.urls
-				// 	.get()
-				// 	.reduce((vid_ids, url) => [...vid_ids, getVideoId(url)], []);
 				commit('addToPending');
 				if (state.downloading.get().length === 0) {
 					dispatch('setShowDownlaoder', 'loader');
 					const downloadIterator = await dispatch('downloadIterator');
 					downloadIterator.next();
 				} else dispatch('setShowDownlaoder', false);
-				// window['dl'] = downloadIterator;
-				// console.log(videoIds, result);
 			},
-			async download(
-				{ state, commit, dispatch },
-				{ videoId = '', extension = 'mp4', resolution = '360p' } = {}
-			) {
-				// const videoId = (url.match(/(?:v\=(?<id>[\w\-]{11}))/) || url.match(/(?<id>^[\w\-]{11}$)/))
-				//   ?.groups?.id;
+			async download({ state, commit, dispatch }, { videoId = '', resolution = '360p' } = {}) {
 				const cancelToken = api['CancelToken']();
 
-				state.socket.emitLocal('download_start', { videoId, cancel: cancelToken.cancel });
-				const url =
-					serverEndpoint +
-					`/download/${state.socket.id}/${videoId}?resolution=${resolution}&extension=${extension}`;
+				//start download
+				dispatch('setShowDownlaoder', false);
+				commit('onDownloadStart', { videoId, cancel: cancelToken.cancel });
+				console.log('starting', { videoId, cancel: cancelToken.cancel });
+				const url = `/download/${videoId}?resolution=${resolution}`;
 				const blob_resp = await api.get(url, {
 					responseType: 'blob',
 					onDownloadProgress: commit('setProgress', videoId),
 					cancelToken: cancelToken.token
 				});
-
 				const blob = blob_resp.data;
 				console.log('blob', blob, state.videosInfo.get());
 
 				const link = document.createElement('a');
 				link.href = window.URL.createObjectURL(new Blob([blob], { type: blob.type }));
 
-				// link.href = url;
-				// else link.href = `http://${serverEndpoint}/download/${state.socket.id}/${videoId}?resolution=${resolution}&extension=${extension}`;
-				const fileName = `${
-					state.videosInfo.get()?.[videoId]?.title || videoId
-				}-${resolution}.${extension}`;
+				const fileName = `${state.videosInfo.get()?.[videoId]?.title || videoId}-${resolution}.mp4`;
 				link.download = fileName;
 				// link.target = '_blank';
 				// console.log(link.href);
 				document.body.appendChild(link);
 				link.click();
 				link.remove();
-				state.socket.emitLocal('downloaded', videoId);
+				commit('onDownloadEnd', videoId);
+				const downloadIterator = await dispatch('downloadIterator');
+				downloadIterator.next();
+				console.log('downloaded', videoId);
 			},
-			async startSocket({ dispatch, commit, state }) {
-				const socket = new (await dispatch('Socket'))();
-				socket.on('ready', () => {
-					socket.emit('socket_id', state.socketId);
-
-					socket.on('connected', (id, temp) => {
-						if (state.urls.get().length > 0) dispatch;
-						api.post('/connect_socket_route/' + state.socketId);
-						// .then((e) => console.log('started signal', e));
-						console.log('websocket is connected');
-					});
-					dispatch('listeners');
-				});
-				commit('setSocket', socket);
-				window['api'] = state.api;
-			},
-			Socket({ dispatch, commit, state }) {
-				if (!state.app_info) dispatch('get_info');
-				let ws;
-				try {
-					ws = getWebsoket();
-					dispatch('setWs', ws);
-				} catch (error) {
-					console.log(error);
-					dispatch('startSocket');
-					return;
-				}
-
-				class Socket {
-					ws: WebSocket;
-					events = {};
-					id: string = state.socketId;
-					constructor() {
-						this.ws = ws;
-						window['sk'] = this;
-						ws.onmessage = (ev) => {
-							const payload = JSON.parse(ev.data);
-							try {
-								this.emitLocal(payload.event, ...payload.data);
-							} catch (e) {
-								console.warn(payload.event, 'Is not listened');
-							}
-							// console.log(payload);
-						};
-						ws.onclose = (ev) => {
-							console.log('reconnecting');
-							if (ws.CLOSED || ws.CLOSING) dispatch('startSocket');
-						};
-					}
-					emitLocal(event, ...data) {
-						this.events[event].forEach((fn) => fn(...data));
-					}
-					emit(event, ...data) {
-						const obj = JSON.stringify({ event, data });
-						const intervalId = setInterval(() => {
-							if (this.ws.readyState) {
-								this.ws.send(obj);
-								clearInterval(intervalId);
-							} else
-								console.warn(
-									"websocket is NOT ready for sending but will send as soon it's ready "
-								);
-						}, 500);
-					}
-					on(event: string, fn: CallableFunction) {
-						const fns = this.events[event] || [];
-						this.events[event] = fns.concat(fn);
-					}
-					get connected() {
-						return this.ws.OPEN;
-					}
-					get disconnected() {
-						return !this.connected;
-					}
-					reconnect() {
-						this.disconnect();
-						dispatch('startSocket');
-					}
-					disconnect() {
-						this.ws = null;
-						dispatch('setSocket', {});
-					}
-				}
-				return Socket;
-			},
-			async fetchMediaDetails({ state, dispatch }, id) {
+			async fetchMediaDetails({ dispatch }, id) {
 				// this will fetch a youtube playlist or video detials
 				// this could be done in js directly but it might exposed api_key
 				const url = '/detials/' + id;
@@ -470,7 +321,7 @@ export default StoreX([
 					dispatch('setIsAvailable', !!resp);
 					// console.log('resp.player', data.player);
 					return toShow;
-				} else throw new Error('fetch error or Invalid videoId or playlistId or URL');
+				} else dispatch('setError', 'fetch error or Invalid videoId or playlistId or URL');
 			}
 		},
 		getters: {

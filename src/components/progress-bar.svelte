@@ -37,7 +37,7 @@
 		<button
 			on:click={() => {
 				cancel();
-				store.commit('rmCancelled', videoId);
+				store.dispatch('rmCancelled', videoId);
 			}}
 			class="text-red-600 bg-red-200 p-1 rounded-lg active:ring focus:outline-none active:outline-none ring-red-400"
 			>cancel</button
