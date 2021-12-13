@@ -13,7 +13,7 @@ app.include_router(routes.router)
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1:7777",
+    "http://192.168.0.163:3000",
     "https://youtube-d.netlify.app"
 ]
 

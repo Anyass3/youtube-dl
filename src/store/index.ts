@@ -219,11 +219,10 @@ export default StoreX([
 						event.returnValue = true;
 					// console.log(event);
 				});
-				window.addEventListener('close', (event) => {
-					if (state.pending.get().length > 0 || state.downloading.get().length > 0)
-						event.returnValue = true;
-					// console.log(event);
-				});
+				// window.addEventListener('close', (event) => {
+				// 		event.returnValue = true;
+				// 	// console.log(event);
+				// });
 			},
 			downloadIterator({ g, dispatch }) {
 				let iterationCount = 0;
@@ -274,8 +273,9 @@ export default StoreX([
 					onDownloadProgress: commit('setProgress', videoId),
 					cancelToken: cancelToken.token
 				});
+
 				const blob = blob_resp.data;
-				console.log('blob', blob, state.videosInfo.get());
+				console.log('blob', blob, state.videosInfo.get(), blob_resp);
 
 				const link = document.createElement('a');
 				link.href = window.URL.createObjectURL(new Blob([blob], { type: blob.type }));
@@ -301,7 +301,7 @@ export default StoreX([
 					// if it is greater than 11 it is playlist
 					attrs = ['title', 'channelId', 'channelTitle', 'description', 'publishedAt'];
 				else attrs = ['channelTitle', 'title', 'channelId', 'publishedAt', 'description'];
-				const resp = (await api.get(url))?.data.items[0];
+				const resp = (await api.get(url))?.data?.items?.[0];
 				// console.log(resp);
 				if (resp) {
 					const data: any = {
@@ -327,11 +327,10 @@ export default StoreX([
 		getters: {
 			async filteredUrl(_, url) {
 				const playlistId = (
-					url.match(/(?:list\=(?<id>[\w\-]{34}))/) || url.match(/(?<id>^PL[\w\-]{32}$)/)
+					url.match(/(?:list=(?<id>[\w-]{34}))/) || url.match(/(?<id>^PL[\w-]{32}$)/)
 				)?.groups?.id;
-				const videoId = (
-					url.match(/(?:v=|\/)(?<id>[\w\-]{11})/) || url.match(/(?<id>^[\w\-]{11}$)/)
-				)?.groups?.id;
+				const videoId = (url.match(/(?:v=|\/)(?<id>[\w-]{11})/) || url.match(/(?<id>^[\w-]{11}$)/))
+					?.groups?.id;
 				return { playlistId, videoId };
 			},
 			genPending: function* (state) {
